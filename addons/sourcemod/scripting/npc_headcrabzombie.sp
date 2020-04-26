@@ -77,13 +77,14 @@ char g_MeleeMissSounds[][] = {
 	")npc/fast_zombie/claw_miss2.wav",
 };
 
+// Code based on Clot from Pelo. Credit to him.
 public Plugin myinfo = 
 {
-	name = "[TF2] KF2 Clot NPC", 
+	name = "[TF2] Headcrab Zombie NPC", 
 	author = "Pelipoika", 
 	description = "", 
 	version = "1.0", 
-	url = ""
+	url = "" 
 };
 
 public void OnPluginStart()
