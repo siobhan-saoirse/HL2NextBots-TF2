@@ -696,7 +696,7 @@ public Action ClotDamaged(int victim, int& attacker, int& inflictor, float& dama
 	SetEntProp(npc.index, Prop_Send, "m_nBody", nBody);
 	
 	//Percentage of damage taken vs our health
-	float flDamagePercentage = (damage / GetEntProp(npc.index, Prop_Data, "m_iMaxHealth") * 00);
+	float flDamagePercentage = (damage / GetEntProp(npc.index, Prop_Data, "m_iMaxHealth") * 500);
 	
 	//Critical hits increase the stun chance 2x
 	if (damagetype & DMG_CRIT)
