@@ -457,7 +457,7 @@ public void ClotThink(int iNPC)
 							}
 						}
 						delete swingTrace;
-					npc.m_flNextMeleeAttack = GetGameTime() + 1.5;
+					npc.m_flNextMeleeAttack = GetGameTime() + 2.5;
 				}
 
 				PF_StopPathing(npc.index);
@@ -731,7 +731,7 @@ public Action Command_PetMenu(int client, int argc)
 	GetClientAbsOrigin(client, flPos);
 	GetClientAbsAngles(client, flAng);
 	
-	Clot(client, flPos, flAng, "models/zombie/classic.mdl");
+	Clot(client, flPos, flAng, "models/zombie/poison.mdl");
 	
 	return Plugin_Handled;
 }
