@@ -9,6 +9,9 @@ TF2 Nextbots Gamedata: https://github.com/Pelipoika/TF2_NextBot/tree/master/game
 
 CustomKeyValues: https://github.com/SlidyBat/CustomKeyValues/tree/master/addons/sourcemod
 
+Dynamic: https://cdn.discordapp.com/attachments/473987803764490270/703801456150708254/dynamic.smx
+
+DHooks **with detours**
 ### Commands
 
 Spawn a Headcrab Zombie: ```sm_headcrab_zombie```
