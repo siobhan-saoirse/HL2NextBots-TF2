@@ -10,5 +10,7 @@ CustomKeyValues: https://github.com/SlidyBat/CustomKeyValues/tree/master/addons/
 ### Commands
 
 Spawn a Headcrab Zombie: ```sm_headcrab_zombie```
-Spawn a Combine Shotgun Soldier: ```sm_combine_shotgun```
+
+Spawn a Shotgun Soldier: ```sm_combine_shotgun```
+
 Spawn a Combine Soldier: ```sm_combine_s```
