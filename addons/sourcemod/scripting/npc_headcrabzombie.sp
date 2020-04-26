@@ -711,7 +711,7 @@ public Action ClotDamaged(int victim, int& attacker, int& inflictor, float& dama
 	SetEntProp(npc.index, Prop_Send, "m_nBody", nBody);
 	
 	//Percentage of damage taken vs our health
-	float flDamagePercentage = (damage / GetEntProp(npc.index, Prop_Data, "m_iMaxHealth") * 100);
+	float flDamagePercentage = (damage / GetEntProp(npc.index, Prop_Data, "m_iMaxHealth") * 50);
 	
 	//Critical hits increase the stun chance 2x
 	if (damagetype & DMG_CRIT)
@@ -736,6 +736,47 @@ public Action ClotDamaged(int victim, int& attacker, int& inflictor, float& dama
 	return Plugin_Changed;
 }
 
+// Ent_Create style position from Doomsday Nuke
+
+public bool TraceEntityFilterPlayer2(int entity, int contentsMask)
+{
+	return entity > GetMaxClients() || !entity;
+}
+
+bool SetTeleportEndPoint(int client, float Position[3])
+{
+	float vAngles[3];
+	float vOrigin[3];
+	float vBuffer[3];
+	float vStart[3];
+	float Distance;
+	
+	GetClientEyePosition(client,vOrigin);
+	GetClientEyeAngles(client, vAngles);
+	
+    //get endpoint for teleport
+	Handle trace = TR_TraceRayFilterEx(vOrigin, vAngles, MASK_SHOT, RayType_Infinite, TraceEntityFilterPlayer2);
+
+	if(TR_DidHit(trace))
+	{   	 
+   	 	TR_GetEndPosition(vStart, trace);
+		GetVectorDistance(vOrigin, vStart, false);
+		Distance = -35.0;
+   	 	GetAngleVectors(vAngles, vBuffer, NULL_VECTOR, NULL_VECTOR);
+		Position[0] = vStart[0] + (vBuffer[0]*Distance);
+		Position[1] = vStart[1] + (vBuffer[1]*Distance);
+		Position[2] = vStart[2] + (vBuffer[2]*Distance);
+	}
+	else
+	{
+		CloseHandle(trace);
+		return false;
+	}
+	
+	CloseHandle(trace);
+	return true;
+}
+
 public Action Command_PetMenu(int client, int argc)
 {
 	//What are you.
@@ -743,9 +784,12 @@ public Action Command_PetMenu(int client, int argc)
 		return Plugin_Handled;
 	
 	float flPos[3], flAng[3];
-	GetClientAbsOrigin(client, flPos);
 	GetClientAbsAngles(client, flAng);
-	
+	if(!SetTeleportEndPoint(client, flPos))
+	{
+		PrintToChat(client, "Could not find place.");
+		return Plugin_Handled;
+	}
 	Clot(client, flPos, flAng, "models/zombie/classic.mdl");
 	
 	return Plugin_Handled;
