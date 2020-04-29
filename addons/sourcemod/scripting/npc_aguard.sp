@@ -25,51 +25,34 @@
 #define GORE_HANDLEFT     (1 << 9)
 
 char g_DeathSounds[][] = {
-	")npc/zombie/zombie_die1.wav",
-	")npc/zombie/zombie_die2.wav",
-	")npc/zombie/zombie_die3.wav",
+	")npc/antlion_guard/antlion_guard_die1.wav",
+	")npc/antlion_guard/antlion_guard_die2s.wav",
 };
 
 char g_HurtSounds[][] = {
-	")npc/zombie/zombie_pain1.wav",
-	")npc/zombie/zombie_pain2.wav",
-	")npc/zombie/zombie_pain3.wav",
-	")npc/zombie/zombie_pain4.wav",
-	")npc/zombie/zombie_pain5.wav",
-	")npc/zombie/zombie_pain6.wav",
+	")npc/antlion_guard/antlion_guard_pain1.wav",
+	")npc/antlion_guard/antlion_guard_pain2.wav",
 };
 
 char g_IdleSounds[][] = {
-	")npc/zombie/zombie_voice_idle1.wav",
-	")npc/zombie/zombie_voice_idle2.wav",
-	")npc/zombie/zombie_voice_idle3.wav",
-	")npc/zombie/zombie_voice_idle4.wav",
-	")npc/zombie/zombie_voice_idle5.wav",
-	")npc/zombie/zombie_voice_idle6.wav",
-	")npc/zombie/zombie_voice_idle7.wav",
-	")npc/zombie/zombie_voice_idle8.wav",
-	")npc/zombie/zombie_voice_idle9.wav",
-	")npc/zombie/zombie_voice_idle10.wav",
-	")npc/zombie/zombie_voice_idle11.wav",
-	")npc/zombie/zombie_voice_idle12.wav",
-	")npc/zombie/zombie_voice_idle13.wav",
-	")npc/zombie/zombie_voice_idle14.wav",
+	")npc/antlion_guard/angry1.wav",
+	")npc/antlion_guard/angry2.wav",
+	")npc/antlion_guard/angry3.wav",
 };
 
 char g_IdleAlertedSounds[][] = {
-	")npc/zombie/zombie_alert1.wav",
-	")npc/zombie/zombie_alert2.wav",
-	")npc/zombie/zombie_alert3.wav",
+	")npc/antlion_guard/angry1.wav",
+	")npc/antlion_guard/angry2.wav",
+	")npc/antlion_guard/angry3.wav",
 };
 
 char g_MeleeHitSounds[][] = {
-	")npc/fast_zombie/claw_strike1.wav",
-	")npc/fast_zombie/claw_strike2.wav",
-	")npc/fast_zombie/claw_strike3.wav",
+	")npc/antlion_guard/shove1.wav",
 };
 char g_MeleeAttackSounds[][] = {
-	")npc/zombie/zo_attack1.wav",
-	")npc/zombie/zo_attack2.wav",
+	")npc/antlion_guard/angry1.wav",
+	")npc/antlion_guard/angry2.wav",
+	")npc/antlion_guard/angry3.wav",
 };
 
 char g_MeleeMissSounds[][] = {
@@ -89,7 +72,7 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-	RegAdminCmd("sm_headcrab_zombie", Command_PetMenu, ADMFLAG_ROOT);
+	RegAdminCmd("sm_aguard", Command_PetMenu, ADMFLAG_ROOT);
 	
 	InitGamedata();
 }
@@ -104,7 +87,6 @@ public void OnMapStart()
 	for (int i = 0; i < (sizeof(g_MeleeAttackSounds));    i++) { PrecacheSound(g_MeleeAttackSounds[i]);    }
 	for (int i = 0; i < (sizeof(g_MeleeMissSounds));   i++) { PrecacheSound(g_MeleeMissSounds[i]);   }
 
-			PrecacheSound("player/flow.wav");
 	InitNavGamedata();
 }
 
@@ -162,15 +144,10 @@ methodmap Clot < CClotBody
 	}
 	
 	public void PlayIdleSound() {
-		if(this.m_flNextIdleSound > GetGameTime())
+		if(this.m_flNextIdleSound > GetGameTime() || this.IsDecapitated())
 			return;
-		if(this.IsDecapitated()) {
-			SetVariantInt(0);
-			AcceptEntityInput(this.index, "SetBodyGroup");
-			EmitSoundToAll("player/flow.wav", this.index, SNDCHAN_STATIC, 95, _, 1.0, GetRandomInt(75, 79));
-		} else {
-			EmitSoundToAll(g_IdleSounds[GetRandomInt(0, sizeof(g_IdleSounds) - 1)], this.index, SNDCHAN_VOICE, 95, _, 1.0, GetRandomInt(95, 105));
-		}
+		
+		EmitSoundToAll(g_IdleSounds[GetRandomInt(0, sizeof(g_IdleSounds) - 1)], this.index, SNDCHAN_STATIC, 95, _, 1.0, GetRandomInt(95, 105));
 		this.m_flNextIdleSound = GetGameTime() + GetRandomFloat(3.0, 6.0);
 		
 		#if defined DEBUG_SOUND
@@ -182,7 +159,7 @@ methodmap Clot < CClotBody
 		if(this.m_flNextIdleSound > GetGameTime() || this.IsDecapitated())
 			return;
 		
-		EmitSoundToAll(g_IdleAlertedSounds[GetRandomInt(0, sizeof(g_IdleAlertedSounds) - 1)], this.index, SNDCHAN_VOICE, 95, _, 1.0, GetRandomInt(95, 105));
+		EmitSoundToAll(g_IdleAlertedSounds[GetRandomInt(0, sizeof(g_IdleAlertedSounds) - 1)], this.index, SNDCHAN_STATIC, 95, _, 1.0, GetRandomInt(95, 105));
 		this.m_flNextIdleSound = GetGameTime() + GetRandomFloat(3.0, 6.0);
 		
 		#if defined DEBUG_SOUND
@@ -191,8 +168,10 @@ methodmap Clot < CClotBody
 	}
 	
 	public void PlayHurtSound() {
+		if(this.m_flNextHurtSound > GetGameTime() || this.IsDecapitated())
+			return;
 		
-		EmitSoundToAll(g_HurtSounds[GetRandomInt(0, sizeof(g_HurtSounds) - 1)], this.index, SNDCHAN_VOICE, 95, _, 1.0, GetRandomInt(95, 105));
+		EmitSoundToAll(g_HurtSounds[GetRandomInt(0, sizeof(g_HurtSounds) - 1)], this.index, SNDCHAN_STATIC, 95, _, 1.0, GetRandomInt(95, 105));
 		this.m_flNextHurtSound = GetGameTime() + GetRandomFloat(0.6, 1.6);
 		
 		#if defined DEBUG_SOUND
@@ -202,7 +181,7 @@ methodmap Clot < CClotBody
 	
 	public void PlayDeathSound() {
 	
-		EmitSoundToAll(g_DeathSounds[GetRandomInt(0, sizeof(g_DeathSounds) - 1)], this.index, SNDCHAN_VOICE, 95, _, 1.0, GetRandomInt(95, 105));
+		EmitSoundToAll(g_DeathSounds[GetRandomInt(0, sizeof(g_DeathSounds) - 1)], this.index, SNDCHAN_STATIC, 95, _, 1.0, GetRandomInt(95, 105));
 		
 		#if defined DEBUG_SOUND
 		PrintToServer("CClot::PlayDeathSound()");
@@ -234,7 +213,7 @@ methodmap Clot < CClotBody
 	
 	public bool IsAlert() { return this.m_iState == 1; }
 	
-	public float GetRunSpeed()      { return this.IsAlert() && !this.IsDecapitated() ? 50.0 : 70.0; }
+	public float GetRunSpeed()      { return this.IsAlert() && !this.IsDecapitated() ? 310.0 : 310.0; }
 	public float GetMaxJumpHeight() { return 50.0; }
 	public float GetLeadRadius()    { return 500.0; }
 	
@@ -251,6 +230,7 @@ methodmap Clot < CClotBody
 		
 		SDKHook(npc.index, SDKHook_Think, ClotThink);
 		SDKHook(npc.index, SDKHook_TraceAttack, ClotDamaged);
+		SetEntProp(npc.index, Prop_Data, "m_iHealth", 500)
 		
 		//IDLE
 		npc.m_iState = 0;
@@ -321,59 +301,11 @@ public void ClotThink(int iNPC)
 	
 	if(npc.IsDecapitated() && npc.m_flNextBloodSpray < GetGameTime())
 	{
-		npc.DispatchParticleEffect(npc.index, "blood_bread_biting2", NULL_VECTOR, NULL_VECTOR, NULL_VECTOR, npc.FindAttachment("gore_headfrontright"), PATTACH_POINT_FOLLOW, true);
+		npc.DispatchParticleEffect(npc.index, "blood_bread_biting2", NULL_VECTOR, NULL_VECTOR, NULL_VECTOR, npc.FindAttachment("leftfront"), PATTACH_POINT_FOLLOW, true);
 		npc.m_flNextBloodSpray = GetGameTime() + 5.0;
 	}
 	
 	npc.Update();
-	
-	if(npc.m_bStunned)
-	{
-		//Begin stun
-		if(npc.m_iStunState == -1) 
-		{
-			int iActivity = npc.LookupActivity("ACT_IDLE");
-			
-			PF_StopPathing(npc.index);
-			
-			npc.StartActivity(iActivity);
-			npc.m_iStunState = 1;
-			
-			//Stunned effect
-			npc.DispatchParticleEffect(npc.index, "conc_stars", NULL_VECTOR, NULL_VECTOR, NULL_VECTOR, npc.FindAttachment("gore_headfrontright"), PATTACH_POINT_FOLLOW, false);
-		}
-		
-		//Stun loop
-		if(npc.IsSequenceFinished() && npc.m_iStunState == 1)
-		{
-			int iActivity = npc.LookupActivity("ACT_IDLE");
-		
-			npc.StartActivity(iActivity);
-			npc.m_iStunState = 2;
-		}
-		
-		//Stun end
-		if(npc.m_flStunEndTime - GetGameTime() <= 0.0 && npc.m_iStunState == 2)
-		{
-			int iActivity = npc.LookupActivity("ACT_IDLE");
-		
-			npc.StartActivity(iActivity);
-			npc.m_iStunState = 3;
-			
-			//Clear stunned effect
-			npc.DispatchParticleEffect(npc.index, "killstreak_t1_lvl1", NULL_VECTOR, NULL_VECTOR, NULL_VECTOR, npc.FindAttachment("gore_headfrontright"), PATTACH_POINT_FOLLOW, true);
-		}
-		
-		//Stun exit
-		//Wait for stun anim to end and start pathing again.
-		if(npc.IsSequenceFinished() && npc.m_iStunState == 3)
-		{
-			npc.m_bStunned = false;
-			npc.m_iStunState = -1;
-		}
-		
-		return;
-	}
 	
 	CKnownEntity PrimaryThreat = npc.GetVisionInterface().GetPrimaryKnownThreat();
 
@@ -437,7 +369,7 @@ public void ClotThink(int iNPC)
 							
 							if(target > 0) 
 							{
-								SDKHooks_TakeDamage(target, npc.index, npc.index, 35.0, DMG_SLASH|DMG_CLUB);
+								SDKHooks_TakeDamage(target, npc.index, npc.index, 95.0, DMG_SLASH|DMG_CLUB);
 								
 								//Snare players
 								if(target <= MaxClients) 
@@ -529,7 +461,7 @@ public void ClotThink(int iNPC)
 	{
 		if(npc.m_bPathing) {
 			if(npc.IsAlert() && !npc.IsDecapitated()) {
-				idealActivity = npc.LookupActivity("ACT_WALK");
+				idealActivity = npc.LookupActivity("ACT_ANTLIONGUARD_RUN_HURT");
 			} else {
 				idealActivity = npc.LookupActivity("ACT_WALK");
 			}
@@ -713,7 +645,7 @@ public Action ClotDamaged(int victim, int& attacker, int& inflictor, float& dama
 	SetEntProp(npc.index, Prop_Send, "m_nBody", nBody);
 	
 	//Percentage of damage taken vs our health
-	float flDamagePercentage = (damage / GetEntProp(npc.index, Prop_Data, "m_iMaxHealth") * 50);
+	float flDamagePercentage = (damage / GetEntProp(npc.index, Prop_Data, "m_iMaxHealth") * 1000);
 	
 	//Critical hits increase the stun chance 2x
 	if (damagetype & DMG_CRIT)
@@ -724,6 +656,8 @@ public Action ClotDamaged(int victim, int& attacker, int& inflictor, float& dama
 	if(!npc.m_bStunned && GetRandomFloat(0.0, 100.0) < flDamagePercentage)
 	{
 		//Off, ouch, owie
+		npc.m_bStunned = true;
+		npc.m_flStunEndTime = GetGameTime() + GetRandomFloat(5.0, 6.0);
 	}
 
 	bool bIsKnownAttacker = (npc.GetVisionInterface().GetKnown(attacker).Address != Address_Null);
@@ -790,7 +724,7 @@ public Action Command_PetMenu(int client, int argc)
 		PrintToChat(client, "Could not find place.");
 		return Plugin_Handled;
 	}
-	Clot(client, flPos, flAng, "models/zombie/classic.mdl");
+	Clot(client, flPos, flAng, "models/antlion_guard.mdl");
 	
 	return Plugin_Handled;
 }

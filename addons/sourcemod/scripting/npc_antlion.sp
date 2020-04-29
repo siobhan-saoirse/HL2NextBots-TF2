@@ -25,41 +25,26 @@
 #define GORE_HANDLEFT     (1 << 9)
 
 char g_DeathSounds[][] = {
-	")npc/zombie/zombie_die1.wav",
-	")npc/zombie/zombie_die2.wav",
-	")npc/zombie/zombie_die3.wav",
+	")npc/antlion/pain1.wav",
+	")npc/antlion/pain2.wav",
 };
 
 char g_HurtSounds[][] = {
-	")npc/zombie/zombie_pain1.wav",
-	")npc/zombie/zombie_pain2.wav",
-	")npc/zombie/zombie_pain3.wav",
-	")npc/zombie/zombie_pain4.wav",
-	")npc/zombie/zombie_pain5.wav",
-	")npc/zombie/zombie_pain6.wav",
+	")npc/antlion/pain1.wav",
+	")npc/antlion/pain2.wav",
 };
 
 char g_IdleSounds[][] = {
-	")npc/zombie/zombie_voice_idle1.wav",
-	")npc/zombie/zombie_voice_idle2.wav",
-	")npc/zombie/zombie_voice_idle3.wav",
-	")npc/zombie/zombie_voice_idle4.wav",
-	")npc/zombie/zombie_voice_idle5.wav",
-	")npc/zombie/zombie_voice_idle6.wav",
-	")npc/zombie/zombie_voice_idle7.wav",
-	")npc/zombie/zombie_voice_idle8.wav",
-	")npc/zombie/zombie_voice_idle9.wav",
-	")npc/zombie/zombie_voice_idle10.wav",
-	")npc/zombie/zombie_voice_idle11.wav",
-	")npc/zombie/zombie_voice_idle12.wav",
-	")npc/zombie/zombie_voice_idle13.wav",
-	")npc/zombie/zombie_voice_idle14.wav",
+	")npc/antlion/idle1.wav",
+	")npc/antlion/idle2.wav",
+	")npc/antlion/idle3.wav",
+	")npc/antlion/idle4.wav",
+	")npc/antlion/idle5.wav",
 };
 
 char g_IdleAlertedSounds[][] = {
-	")npc/zombie/zombie_alert1.wav",
-	")npc/zombie/zombie_alert2.wav",
-	")npc/zombie/zombie_alert3.wav",
+	")npc/antlion/pain1.wav",
+	")npc/antlion/pain2.wav",
 };
 
 char g_MeleeHitSounds[][] = {
@@ -68,10 +53,13 @@ char g_MeleeHitSounds[][] = {
 	")npc/fast_zombie/claw_strike3.wav",
 };
 char g_MeleeAttackSounds[][] = {
-	")npc/zombie/zo_attack1.wav",
-	")npc/zombie/zo_attack2.wav",
+	")npc/antlion/attack_single1.wav",
+	")npc/antlion/attack_single2.wav",
+	")npc/antlion/attack_single3.wav",
+	")npc/antlion/attack_double1.wav",
+	")npc/antlion/attack_double2.wav",
+	")npc/antlion/attack_double3.wav",
 };
-
 char g_MeleeMissSounds[][] = {
 	")npc/fast_zombie/claw_miss1.wav",
 	")npc/fast_zombie/claw_miss2.wav",
@@ -89,7 +77,7 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-	RegAdminCmd("sm_headcrab_zombie", Command_PetMenu, ADMFLAG_ROOT);
+	RegAdminCmd("sm_antlion_npc", Command_PetMenu, ADMFLAG_ROOT);
 	
 	InitGamedata();
 }
@@ -104,7 +92,6 @@ public void OnMapStart()
 	for (int i = 0; i < (sizeof(g_MeleeAttackSounds));    i++) { PrecacheSound(g_MeleeAttackSounds[i]);    }
 	for (int i = 0; i < (sizeof(g_MeleeMissSounds));   i++) { PrecacheSound(g_MeleeMissSounds[i]);   }
 
-			PrecacheSound("player/flow.wav");
 	InitNavGamedata();
 }
 
@@ -162,15 +149,10 @@ methodmap Clot < CClotBody
 	}
 	
 	public void PlayIdleSound() {
-		if(this.m_flNextIdleSound > GetGameTime())
+		if(this.m_flNextIdleSound > GetGameTime() || this.IsDecapitated())
 			return;
-		if(this.IsDecapitated()) {
-			SetVariantInt(0);
-			AcceptEntityInput(this.index, "SetBodyGroup");
-			EmitSoundToAll("player/flow.wav", this.index, SNDCHAN_STATIC, 95, _, 1.0, GetRandomInt(75, 79));
-		} else {
-			EmitSoundToAll(g_IdleSounds[GetRandomInt(0, sizeof(g_IdleSounds) - 1)], this.index, SNDCHAN_VOICE, 95, _, 1.0, GetRandomInt(95, 105));
-		}
+		
+		EmitSoundToAll(g_IdleSounds[GetRandomInt(0, sizeof(g_IdleSounds) - 1)], this.index, SNDCHAN_STATIC, 95, _, 1.0, GetRandomInt(95, 105));
 		this.m_flNextIdleSound = GetGameTime() + GetRandomFloat(3.0, 6.0);
 		
 		#if defined DEBUG_SOUND
@@ -182,7 +164,7 @@ methodmap Clot < CClotBody
 		if(this.m_flNextIdleSound > GetGameTime() || this.IsDecapitated())
 			return;
 		
-		EmitSoundToAll(g_IdleAlertedSounds[GetRandomInt(0, sizeof(g_IdleAlertedSounds) - 1)], this.index, SNDCHAN_VOICE, 95, _, 1.0, GetRandomInt(95, 105));
+		EmitSoundToAll(g_IdleAlertedSounds[GetRandomInt(0, sizeof(g_IdleAlertedSounds) - 1)], this.index, SNDCHAN_STATIC, 95, _, 1.0, GetRandomInt(95, 105));
 		this.m_flNextIdleSound = GetGameTime() + GetRandomFloat(3.0, 6.0);
 		
 		#if defined DEBUG_SOUND
@@ -191,8 +173,10 @@ methodmap Clot < CClotBody
 	}
 	
 	public void PlayHurtSound() {
+		if(this.m_flNextHurtSound > GetGameTime() || this.IsDecapitated())
+			return;
 		
-		EmitSoundToAll(g_HurtSounds[GetRandomInt(0, sizeof(g_HurtSounds) - 1)], this.index, SNDCHAN_VOICE, 95, _, 1.0, GetRandomInt(95, 105));
+		EmitSoundToAll(g_HurtSounds[GetRandomInt(0, sizeof(g_HurtSounds) - 1)], this.index, SNDCHAN_STATIC, 95, _, 1.0, GetRandomInt(95, 105));
 		this.m_flNextHurtSound = GetGameTime() + GetRandomFloat(0.6, 1.6);
 		
 		#if defined DEBUG_SOUND
@@ -201,8 +185,10 @@ methodmap Clot < CClotBody
 	}
 	
 	public void PlayDeathSound() {
+		if (this.IsDecapitated())
+			return;
 	
-		EmitSoundToAll(g_DeathSounds[GetRandomInt(0, sizeof(g_DeathSounds) - 1)], this.index, SNDCHAN_VOICE, 95, _, 1.0, GetRandomInt(95, 105));
+		EmitSoundToAll(g_DeathSounds[GetRandomInt(0, sizeof(g_DeathSounds) - 1)], this.index, SNDCHAN_STATIC, 95, _, 1.0, GetRandomInt(95, 105));
 		
 		#if defined DEBUG_SOUND
 		PrintToServer("CClot::PlayDeathSound()");
@@ -234,7 +220,7 @@ methodmap Clot < CClotBody
 	
 	public bool IsAlert() { return this.m_iState == 1; }
 	
-	public float GetRunSpeed()      { return this.IsAlert() && !this.IsDecapitated() ? 50.0 : 70.0; }
+	public float GetRunSpeed()      { return this.IsAlert() && !this.IsDecapitated() ? 350.0 : 420.0; }
 	public float GetMaxJumpHeight() { return 50.0; }
 	public float GetLeadRadius()    { return 500.0; }
 	
@@ -310,8 +296,6 @@ public void ClotThink(int iNPC)
 	
 	//Don't let clients decide the bodygroups :angry:
 	SetEntProp(npc.index, Prop_Send, "m_nBody", GetEntProp(npc.index, Prop_Send, "m_nBody"));
-	SetVariantInt(1);
-	AcceptEntityInput(iNPC, "SetBodyGroup");
 	//Think throttling
 	if(npc.m_flNextThinkTime > GetGameTime()) {
 		return;
@@ -713,7 +697,7 @@ public Action ClotDamaged(int victim, int& attacker, int& inflictor, float& dama
 	SetEntProp(npc.index, Prop_Send, "m_nBody", nBody);
 	
 	//Percentage of damage taken vs our health
-	float flDamagePercentage = (damage / GetEntProp(npc.index, Prop_Data, "m_iMaxHealth") * 50);
+	float flDamagePercentage = (damage / GetEntProp(npc.index, Prop_Data, "m_iMaxHealth") * 1000);
 	
 	//Critical hits increase the stun chance 2x
 	if (damagetype & DMG_CRIT)
@@ -790,7 +774,7 @@ public Action Command_PetMenu(int client, int argc)
 		PrintToChat(client, "Could not find place.");
 		return Plugin_Handled;
 	}
-	Clot(client, flPos, flAng, "models/zombie/classic.mdl");
+	Clot(client, flPos, flAng, "models/antlion.mdl");
 	
 	return Plugin_Handled;
 }
