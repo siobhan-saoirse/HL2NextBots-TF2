@@ -1,4 +1,6 @@
 # HL2 NPCs/Nextbots in TF2
+Due to broken gamedata, This plugin doesn't work.
+
 A plugin that enables hl2 npcs as nextbot npcs for TF2
 
 ## Requirements
