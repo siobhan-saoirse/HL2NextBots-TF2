@@ -216,7 +216,7 @@ stock float GetCombatIntensity(NavArea area)
 	float m_startTime = view_as<float>(LoadFromAddress(Area + view_as<Address>(0x218), NumberType_Int32));
 
 	float tf_nav_combat_decay_rate = FindConVar("tf_nav_combat_decay_rate").FloatValue;
-	return Max(m_timestamp - ((GetGameTime() - m_startTime) * tf_nav_combat_decay_rate), 0.0);
+	//return Max(m_timestamp - ((GetGameTime() - m_startTime) * tf_nav_combat_decay_rate), 0.0);
 }
 
 stock bool IsInCombat(NavArea area)
