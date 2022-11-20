@@ -21,3 +21,7 @@ Spawn a Headcrab Zombie: ```sm_headcrab_zombie```
 Spawn a Shotgun Soldier: ```sm_combine_shotgun```
 
 Spawn a Combine Soldier: ```sm_combine_s```
+
+Spawn a Metrocop: ```sm_metropolice```
+
+Spawn an Antlion: ```sm_antlion```
