@@ -446,7 +446,7 @@ methodmap CBaseActor < CVision
 	public int FindBodygroupByName(const char[] name)                { return SDKCall(g_hFindBodygroupByName, this.index, name);                                          }
 	public int SelectWeightedSequence(int activity, int curSequence) { return SDKCall(g_hSelectWeightedSequence, this.index, this.GetModelPtr(), activity, curSequence); }
 	
-	public void GetAttachment(const char[] szName, float absOrigin[3], float absAngles[3]) { GetEntityAttachment(this.index, this.FindAttachment(szName), absOrigin, absAngles); }
+	public void GetAttachment(const char[] szName, float absOrigin[3], float absAngles[3]) { SDKCall(g_hGetAttachment, this.index, this.FindAttachment(szName), absOrigin, absAngles); }
 	public void SetBodygroup(int iGroup, int iValue)                                       { SDKCall(g_hSetBodyGroup, this.index, iGroup, iValue);                                     }
 	public void Approach(const float vecGoal[3])                                           { SDKCall(g_hApproach, this.GetLocomotionInterface(), vecGoal, 0.1);                        }
 	public void Jump()                                                                     { SDKCall(g_hJump, this.GetLocomotionInterface());                                          }
