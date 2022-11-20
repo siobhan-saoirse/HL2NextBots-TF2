@@ -26,7 +26,7 @@
 
 char g_DeathSounds[][] = {
 	")npc/antlion_guard/antlion_guard_die1.wav",
-	")npc/antlion_guard/antlion_guard_die2s.wav",
+	")npc/antlion_guard/antlion_guard_die2.wav",
 };
 
 char g_HurtSounds[][] = {
@@ -72,7 +72,7 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-	RegAdminCmd("sm_aguard", Command_PetMenu, ADMFLAG_ROOT);
+	RegAdminCmd("sm_antlionguard", Command_PetMenu, ADMFLAG_ROOT);
 	
 	InitGamedata();
 }
@@ -219,7 +219,7 @@ methodmap Clot < CClotBody
 	
 	public Clot(int client, float vecPos[3], float vecAng[3], const char[] model)
 	{
-		Clot npc = view_as<Clot>(CBaseActor(vecPos, vecAng, model, "1.0", "125"));
+		Clot npc = view_as<Clot>(CBaseActor(vecPos, vecAng, model, "1.0", "500"));
 		
 		int iActivity = npc.LookupActivity("ACT_IDLE");
 		if(iActivity > 0) npc.StartActivity(iActivity);
@@ -369,7 +369,7 @@ public void ClotThink(int iNPC)
 							
 							if(target > 0) 
 							{
-								SDKHooks_TakeDamage(target, npc.index, npc.index, 95.0, DMG_SLASH|DMG_CLUB);
+								SDKHooks_TakeDamage(target, npc.index, npc.index, 75.0, DMG_CRUSH);
 								
 								//Snare players
 								if(target <= MaxClients) 

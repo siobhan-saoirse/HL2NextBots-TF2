@@ -2536,7 +2536,7 @@ public void OnMapStart()
 	{
 		PrecacheModel(gibs[i]);
 	}
-	PrecacheSound("^weapons/smg1/npc_smg1_fire1.wav");
+	PrecacheSound("^weapons/ar1/ar1_dist1.wav");
 	PrecacheSound("npc/combine_soldier/gear1.wav");
 	PrecacheSound("npc/combine_soldier/die1.wav");
 	PrecacheSound("npc/combine_soldier/die2.wav");

@@ -1,7 +1,7 @@
 #include <sdkhooks>
 #include <tf2_stocks>
-#include <PathFollower>
-#include <PathFollower_Nav>
+#include <PathFollower_legacy>
+#include <PathFollower_Nav_legacy>
 #include <customkeyvalues>
 #include <dhooks>
 
@@ -234,7 +234,7 @@ methodmap Clot < CClotBody
 	
 	public bool IsAlert() { return this.m_iState == 1; }
 	
-	public float GetRunSpeed()      { return this.IsAlert() && !this.IsDecapitated() ? 50.0 : 70.0; }
+	public float GetRunSpeed()      { return 50.0; }
 	public float GetMaxJumpHeight() { return 50.0; }
 	public float GetLeadRadius()    { return 500.0; }
 	
@@ -308,10 +308,6 @@ public void ClotThink(int iNPC)
 
 	Clot npc = view_as<Clot>(iNPC);
 	
-	//Don't let clients decide the bodygroups :angry:
-	SetEntProp(npc.index, Prop_Send, "m_nBody", GetEntProp(npc.index, Prop_Send, "m_nBody"));
-	SetVariantInt(1);
-	AcceptEntityInput(iNPC, "SetBodyGroup");
 	//Think throttling
 	if(npc.m_flNextThinkTime > GetGameTime()) {
 		return;

@@ -1,7 +1,7 @@
 #include <sdkhooks>
 #include <tf2_stocks>
-#include <PathFollower>
-#include <PathFollower_Nav>
+#include <PathFollower_legacy>
+#include <PathFollower_Nav_legacy>
 #include <customkeyvalues>
 #include <dhooks>
 
@@ -12,18 +12,6 @@
 #include <base/CBaseActor>
 
 #pragma newdecls required;
-
-static int AE_ANTLION_BURROW_OUT = -1;
-static int AE_ANTLION_MELEE1_SOUND = -1;
-static int AE_ANTLION_MELEE2_SOUND = -1;
-
-static int AE_ANTLION_FOOTSTEP_SOFT = -1;
-static int AE_ANTLION_FOOTSTEP_HEAVY = -1;
-static int AE_ANTLION_WALK_FOOTSTEP = -1;
-
-static int AE_ANTLION_MELEE_HIT1 = -1;
-static int AE_ANTLION_MELEE_HIT2 = -1;
-static int AE_ANTLION_MELEE_POUNCE = -1;
 
 #define GORE_ABDOMEN      (1 << 0)
 #define GORE_FOREARMLEFT  (1 << 1)
@@ -37,26 +25,41 @@ static int AE_ANTLION_MELEE_POUNCE = -1;
 #define GORE_HANDLEFT     (1 << 9)
 
 char g_DeathSounds[][] = {
-	")npc/antlion/pain1.wav",
-	")npc/antlion/pain2.wav",
+	")npc/zombie/zombie_die1.wav",
+	")npc/zombie/zombie_die2.wav",
+	")npc/zombie/zombie_die3.wav",
 };
 
 char g_HurtSounds[][] = {
-	")npc/antlion/pain1.wav",
-	")npc/antlion/pain2.wav",
+	")npc/zombie/zombie_pain1.wav",
+	")npc/zombie/zombie_pain2.wav",
+	")npc/zombie/zombie_pain3.wav",
+	")npc/zombie/zombie_pain4.wav",
+	")npc/zombie/zombie_pain5.wav",
+	")npc/zombie/zombie_pain6.wav",
 };
 
 char g_IdleSounds[][] = {
-	")npc/antlion/idle1.wav",
-	")npc/antlion/idle2.wav",
-	")npc/antlion/idle3.wav",
-	")npc/antlion/idle4.wav",
-	")npc/antlion/idle5.wav",
+	")npc/zombie/zombie_voice_idle1.wav",
+	")npc/zombie/zombie_voice_idle2.wav",
+	")npc/zombie/zombie_voice_idle3.wav",
+	")npc/zombie/zombie_voice_idle4.wav",
+	")npc/zombie/zombie_voice_idle5.wav",
+	")npc/zombie/zombie_voice_idle6.wav",
+	")npc/zombie/zombie_voice_idle7.wav",
+	")npc/zombie/zombie_voice_idle8.wav",
+	")npc/zombie/zombie_voice_idle9.wav",
+	")npc/zombie/zombie_voice_idle10.wav",
+	")npc/zombie/zombie_voice_idle11.wav",
+	")npc/zombie/zombie_voice_idle12.wav",
+	")npc/zombie/zombie_voice_idle13.wav",
+	")npc/zombie/zombie_voice_idle14.wav",
 };
 
 char g_IdleAlertedSounds[][] = {
-	")npc/antlion/pain1.wav",
-	")npc/antlion/pain2.wav",
+	")npc/zombie/zombie_alert1.wav",
+	")npc/zombie/zombie_alert2.wav",
+	")npc/zombie/zombie_alert3.wav",
 };
 
 char g_MeleeHitSounds[][] = {
@@ -65,10 +68,10 @@ char g_MeleeHitSounds[][] = {
 	")npc/fast_zombie/claw_strike3.wav",
 };
 char g_MeleeAttackSounds[][] = {
-	")npc/antlion/attack_single1.wav",
-	")npc/antlion/attack_single2.wav",
-	")npc/antlion/attack_single3.wav"
+	")npc/zombie/zo_attack1.wav",
+	")npc/zombie/zo_attack2.wav",
 };
+
 char g_MeleeMissSounds[][] = {
 	")npc/fast_zombie/claw_miss1.wav",
 	")npc/fast_zombie/claw_miss2.wav",
@@ -77,7 +80,7 @@ char g_MeleeMissSounds[][] = {
 // Code based on Clot from Pelo. Credit to him.
 public Plugin myinfo = 
 {
-	name = "[TF2] Headcrab Zombie NPC", 
+	name = "[TF2] Mercenary Zombie NPC", 
 	author = "Pelipoika", 
 	description = "", 
 	version = "1.0", 
@@ -86,7 +89,7 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-	RegAdminCmd("sm_antlion", Command_PetMenu, ADMFLAG_ROOT);
+	RegAdminCmd("sm_merc_zombie", Command_PetMenu, ADMFLAG_ROOT);
 	
 	InitGamedata();
 }
@@ -101,6 +104,7 @@ public void OnMapStart()
 	for (int i = 0; i < (sizeof(g_MeleeAttackSounds));    i++) { PrecacheSound(g_MeleeAttackSounds[i]);    }
 	for (int i = 0; i < (sizeof(g_MeleeMissSounds));   i++) { PrecacheSound(g_MeleeMissSounds[i]);   }
 
+			PrecacheSound("player/flow.wav");
 	InitNavGamedata();
 }
 
@@ -158,10 +162,15 @@ methodmap Clot < CClotBody
 	}
 	
 	public void PlayIdleSound() {
-		if(this.m_flNextIdleSound > GetGameTime() || this.IsDecapitated())
+		if(this.m_flNextIdleSound > GetGameTime())
 			return;
-		
-		EmitSoundToAll(g_IdleSounds[GetRandomInt(0, sizeof(g_IdleSounds) - 1)], this.index, SNDCHAN_STATIC, 95, _, 1.0, GetRandomInt(95, 105));
+		if(this.IsDecapitated()) {
+			SetVariantInt(0);
+			AcceptEntityInput(this.index, "SetBodyGroup");
+			EmitSoundToAll("player/flow.wav", this.index, SNDCHAN_STATIC, 95, _, 1.0, GetRandomInt(75, 79));
+		} else {
+			EmitSoundToAll(g_IdleSounds[GetRandomInt(0, sizeof(g_IdleSounds) - 1)], this.index, SNDCHAN_VOICE, 95, _, 1.0, GetRandomInt(95, 105));
+		}
 		this.m_flNextIdleSound = GetGameTime() + GetRandomFloat(3.0, 6.0);
 		
 		#if defined DEBUG_SOUND
@@ -173,7 +182,7 @@ methodmap Clot < CClotBody
 		if(this.m_flNextIdleSound > GetGameTime() || this.IsDecapitated())
 			return;
 		
-		EmitSoundToAll(g_IdleAlertedSounds[GetRandomInt(0, sizeof(g_IdleAlertedSounds) - 1)], this.index, SNDCHAN_STATIC, 95, _, 1.0, GetRandomInt(95, 105));
+		EmitSoundToAll(g_IdleAlertedSounds[GetRandomInt(0, sizeof(g_IdleAlertedSounds) - 1)], this.index, SNDCHAN_VOICE, 95, _, 1.0, GetRandomInt(95, 105));
 		this.m_flNextIdleSound = GetGameTime() + GetRandomFloat(3.0, 6.0);
 		
 		#if defined DEBUG_SOUND
@@ -182,10 +191,8 @@ methodmap Clot < CClotBody
 	}
 	
 	public void PlayHurtSound() {
-		if(this.m_flNextHurtSound > GetGameTime() || this.IsDecapitated())
-			return;
 		
-		EmitSoundToAll(g_HurtSounds[GetRandomInt(0, sizeof(g_HurtSounds) - 1)], this.index, SNDCHAN_STATIC, 95, _, 1.0, GetRandomInt(95, 105));
+		EmitSoundToAll(g_HurtSounds[GetRandomInt(0, sizeof(g_HurtSounds) - 1)], this.index, SNDCHAN_VOICE, 95, _, 1.0, GetRandomInt(95, 105));
 		this.m_flNextHurtSound = GetGameTime() + GetRandomFloat(0.6, 1.6);
 		
 		#if defined DEBUG_SOUND
@@ -194,10 +201,8 @@ methodmap Clot < CClotBody
 	}
 	
 	public void PlayDeathSound() {
-		if (this.IsDecapitated())
-			return;
 	
-		EmitSoundToAll(g_DeathSounds[GetRandomInt(0, sizeof(g_DeathSounds) - 1)], this.index, SNDCHAN_STATIC, 95, _, 1.0, GetRandomInt(95, 105));
+		EmitSoundToAll(g_DeathSounds[GetRandomInt(0, sizeof(g_DeathSounds) - 1)], this.index, SNDCHAN_VOICE, 95, _, 1.0, GetRandomInt(95, 105));
 		
 		#if defined DEBUG_SOUND
 		PrintToServer("CClot::PlayDeathSound()");
@@ -229,22 +234,21 @@ methodmap Clot < CClotBody
 	
 	public bool IsAlert() { return this.m_iState == 1; }
 	
-	public float GetRunSpeed()      { return this.IsAlert() && !this.IsDecapitated() ? 350.0 : 420.0; }
+	public float GetRunSpeed()      { return this.IsAlert() && !this.IsDecapitated() ? 240.0 : 240.0; }
 	public float GetMaxJumpHeight() { return 50.0; }
 	public float GetLeadRadius()    { return 500.0; }
 	
 	public Clot(int client, float vecPos[3], float vecAng[3], const char[] model)
 	{
-		Clot npc = view_as<Clot>(CBaseActor(vecPos, vecAng, model, "1.0", "125"));
+		Clot npc = view_as<Clot>(CBaseActor(vecPos, vecAng, model, "1.0", "200"));
 		
-		int iActivity = npc.LookupActivity("ACT_IDLE");
+		int iActivity = npc.LookupActivity("ACT_MP_STAND_MELEE");
 		if(iActivity > 0) npc.StartActivity(iActivity);
 		
 		npc.CreatePather(18.0, npc.GetMaxJumpHeight(), 1000.0, npc.GetSolidMask(), 95.0, 0.25, 1.5);
 		npc.m_flNextTargetTime  = GetGameTime() + GetRandomFloat(1.0, 4.0);
 		npc.m_flNextMeleeAttack = npc.m_flNextTargetTime;
 		
-		SetEntProp(npc.index, Prop_Data, "m_iHealth", 20)
 		SDKHook(npc.index, SDKHook_Think, ClotThink);
 		SDKHook(npc.index, SDKHook_TraceAttack, ClotDamaged);
 		
@@ -306,6 +310,8 @@ public void ClotThink(int iNPC)
 	
 	//Don't let clients decide the bodygroups :angry:
 	SetEntProp(npc.index, Prop_Send, "m_nBody", GetEntProp(npc.index, Prop_Send, "m_nBody"));
+	SetVariantInt(1);
+	AcceptEntityInput(iNPC, "SetBodyGroup");
 	//Think throttling
 	if(npc.m_flNextThinkTime > GetGameTime()) {
 		return;
@@ -326,7 +332,7 @@ public void ClotThink(int iNPC)
 		//Begin stun
 		if(npc.m_iStunState == -1) 
 		{
-			int iActivity = npc.LookupActivity("ACT_IDLE");
+			int iActivity = npc.LookupActivity("ACT_MP_STAND_MELEE");
 			
 			PF_StopPathing(npc.index);
 			
@@ -340,7 +346,7 @@ public void ClotThink(int iNPC)
 		//Stun loop
 		if(npc.IsSequenceFinished() && npc.m_iStunState == 1)
 		{
-			int iActivity = npc.LookupActivity("ACT_IDLE");
+			int iActivity = npc.LookupActivity("ACT_MP_STAND_MELEE");
 		
 			npc.StartActivity(iActivity);
 			npc.m_iStunState = 2;
@@ -349,7 +355,7 @@ public void ClotThink(int iNPC)
 		//Stun end
 		if(npc.m_flStunEndTime - GetGameTime() <= 0.0 && npc.m_iStunState == 2)
 		{
-			int iActivity = npc.LookupActivity("ACT_IDLE");
+			int iActivity = npc.LookupActivity("ACT_MP_STAND_MELEE");
 		
 			npc.StartActivity(iActivity);
 			npc.m_iStunState = 3;
@@ -419,7 +425,7 @@ public void ClotThink(int iNPC)
 				if(npc.m_flNextMeleeAttack < GetGameTime())
 				{
 					//Play attack anim
-					npc.AddGesture("ACT_MELEE_ATTACK1");
+					npc.AddGesture("ACT_MP_ATTACK_STAND_MELEE");
 					
 						Handle swingTrace;
 						if(npc.DoSwingTrace(swingTrace)) 
@@ -431,7 +437,7 @@ public void ClotThink(int iNPC)
 							
 							if(target > 0) 
 							{
-								SDKHooks_TakeDamage(target, npc.index, npc.index, 8.0, DMG_SLASH);
+								SDKHooks_TakeDamage(target, npc.index, npc.index, 35.0, DMG_SLASH|DMG_CLUB);
 								
 								//Snare players
 								if(target <= MaxClients) 
@@ -451,7 +457,7 @@ public void ClotThink(int iNPC)
 								if(iHealthPost <= 0) 
 								{
 									//Yup, time to celebrate
-									npc.AddGesture("ACT_FLINCH");
+									npc.AddGesture("ACT_MP_GESTURE_FLINCH_CHEST");
 								}
 							} 
 							else 
@@ -523,12 +529,12 @@ public void ClotThink(int iNPC)
 	{
 		if(npc.m_bPathing) {
 			if(npc.IsAlert() && !npc.IsDecapitated()) {
-				idealActivity = npc.LookupActivity("ACT_WALK");
+				idealActivity = npc.LookupActivity("ACT_MP_RUN_MELEE");
 			} else {
-				idealActivity = npc.LookupActivity("ACT_WALK");
+				idealActivity = npc.LookupActivity("ACT_MP_RUN_MELEE");
 			}
 		} else {
-			idealActivity = npc.LookupActivity("ACT_IDLE");
+			idealActivity = npc.LookupActivity("ACT_MP_STAND_MELEE");
 		}
 	}
 	
@@ -549,7 +555,7 @@ public void ClotThink(int iNPC)
 		else if ((GetEntityFlags(iNPC) & FL_ONGROUND) == 0)
 		{
 			// In an air walk.
-			idealActivity = npc.LookupActivity("ACT_IDLE");
+			idealActivity = npc.LookupActivity("ACT_MP_STAND_MELEE");
 			npc.m_bInAirWalk = true;
 		}
 	}
@@ -573,9 +579,9 @@ public void ClotThink(int iNPC)
 			if ( npc.m_bJumping )
 			{
 				if ( GetGameTime() - npc.m_flJumpStartTime > 0.3 ) {
-					idealActivity = npc.LookupActivity("ACT_IDLE");
+					idealActivity = npc.LookupActivity("ACT_MP_STAND_MELEE");
 				} else {
-					idealActivity = npc.LookupActivity("ACT_IDLE");
+					idealActivity = npc.LookupActivity("ACT_MP_STAND_MELEE");
 				}
 			}
 		}
@@ -707,7 +713,7 @@ public Action ClotDamaged(int victim, int& attacker, int& inflictor, float& dama
 	SetEntProp(npc.index, Prop_Send, "m_nBody", nBody);
 	
 	//Percentage of damage taken vs our health
-	float flDamagePercentage = (damage / GetEntProp(npc.index, Prop_Data, "m_iMaxHealth") * 1000);
+	float flDamagePercentage = (damage / GetEntProp(npc.index, Prop_Data, "m_iMaxHealth") * 50);
 	
 	//Critical hits increase the stun chance 2x
 	if (damagetype & DMG_CRIT)
@@ -784,7 +790,7 @@ public Action Command_PetMenu(int client, int argc)
 		PrintToChat(client, "Could not find place.");
 		return Plugin_Handled;
 	}
-	Clot(client, flPos, flAng, "models/antlion.mdl");
+	Clot(client, flPos, flAng, "models/player/soldier.mdl");
 	
 	return Plugin_Handled;
 }

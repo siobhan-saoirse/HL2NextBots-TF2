@@ -1937,7 +1937,7 @@ methodmap PetHeavy < BaseNPC
 		BaseNPC pet = new BaseNPC(vecPos, vecAng, model, "1.0");
 		
 		SetEntPropFloat(pet.index, Prop_Data, "m_speed", 115.0);
-		SetEntProp(pet.index, Prop_Send, "m_nSkin", team - 2);
+		SetEntProp(pet.index, Prop_Send, "m_nSkin", 1);
 		SetEntProp(pet.index, Prop_Send, "m_iTeamNum", team);
 		
 		Dynamic brain = pet.GetBrainInterface();
@@ -2129,6 +2129,10 @@ methodmap PetHeavy < BaseNPC
 							 
 							EmitSoundToAll(")weapons/shotgun/shotgun_fire6.wav", this.index, SNDCHAN_WEAPON, 95, _, SNDVOL_NORMAL, 100); 
 							FireBullet(this.index, this.Weapon, WorldSpaceCenter(this.index), vecDir, GetRandomInt(18.6, 28.8), 9000.0, DMG_BULLET, "bullet_tracer02_blue");
+							FireBullet(this.index, this.Weapon, WorldSpaceCenter(this.index), vecDir, GetRandomInt(18.6, 28.8), 9000.0, DMG_BULLET, "bullet_tracer02_blue");
+							FireBullet(this.index, this.Weapon, WorldSpaceCenter(this.index), vecDir, GetRandomInt(18.6, 28.8), 9000.0, DMG_BULLET, "bullet_tracer02_blue");
+							FireBullet(this.index, this.Weapon, WorldSpaceCenter(this.index), vecDir, GetRandomInt(18.6, 28.8), 9000.0, DMG_BULLET, "bullet_tracer02_blue");
+							FireBullet(this.index, this.Weapon, WorldSpaceCenter(this.index), vecDir, GetRandomInt(18.6, 28.8), 9000.0, DMG_BULLET, "bullet_tracer02_blue");
 						}
 						
 						float origin[3], angles[3];
@@ -2137,7 +2141,7 @@ methodmap PetHeavy < BaseNPC
 							
 						this.PlayGesture("gesture_shoot_shotgun");
 						this.m_flTimeWeaponIdle = GetGameTime() + 0.2;
-						this.m_flNextPrimaryAttack = GetGameTime() + 1;
+						this.m_flNextPrimaryAttack = GetGameTime() + GetRandomFloat(0.4f, 2.0f);
 					}
 				}
 			}
