@@ -476,8 +476,18 @@ public void ClotThink(int iNPC)
 			}
 			else
 			{
-				PF_StartPathing(npc.index);
-				npc.m_bPathing = true;
+				if(npc.m_flNextMeleeAttack > GetGameTime())
+				{
+					
+					PF_StopPathing(npc.index);
+					npc.m_bPathing = false;
+
+				} else {
+
+					PF_StartPathing(npc.index);
+					npc.m_bPathing = true;
+
+				}
 			}
 		}
 	}

@@ -90,6 +90,7 @@ public Plugin myinfo =
 public void OnPluginStart()
 {
 	RegAdminCmd("sm_headcrab_zombie", Command_PetMenu, ADMFLAG_ROOT);
+	RegAdminCmd("sm_headcrab_zombie_torso", Command_PetMenu2, ADMFLAG_ROOT);
 	
 	InitGamedata();
 }
@@ -108,6 +109,18 @@ public void OnMapStart()
 	InitNavGamedata();
 }
 
+methodmap HeadcrabRagdoll < CClotBody
+{
+
+	public HeadcrabRagdoll(int client, float vecPos[3], float vecAng[3], const char[] model)
+	{
+		HeadcrabRagdoll npc = view_as<HeadcrabRagdoll>(CBaseActor(vecPos, vecAng, model, "1.0", "0"));
+		
+		int iActivity = npc.LookupActivity("ACT_IDLE");
+		if(iActivity > 0) npc.StartActivity(iActivity);
+	}
+	
+}
 methodmap Clot < CClotBody
 {
 	property int m_iState
@@ -179,11 +192,7 @@ methodmap Clot < CClotBody
 	}
 	
 	public void PlayIdleAlertSound() {
-		if(this.m_flNextIdleSound > GetGameTime() || this.IsDecapitated())
-			return;
-		
 		EmitSoundToAll(g_IdleAlertedSounds[GetRandomInt(0, sizeof(g_IdleAlertedSounds) - 1)], this.index, SNDCHAN_VOICE, 95, _, 1.0, GetRandomInt(95, 105));
-		this.m_flNextIdleSound = GetGameTime() + GetRandomFloat(3.0, 6.0);
 		
 		#if defined DEBUG_SOUND
 		PrintToServer("CClot::PlayIdleAlertSound()");
@@ -240,11 +249,18 @@ methodmap Clot < CClotBody
 	
 	public Clot(int client, float vecPos[3], float vecAng[3], const char[] model)
 	{
-		Clot npc = view_as<Clot>(CBaseActor(vecPos, vecAng, model, "1.0", "125"));
+		Clot npc;
+        if (StrContains(model,"torso") != -1) {
+			npc = view_as<Clot>(CBaseActor(vecPos, vecAng, model, "1.0", "25"));
+		} else {
+			npc = view_as<Clot>(CBaseActor(vecPos, vecAng, model, "1.0", "50"));
+		}
 		
 		int iActivity = npc.LookupActivity("ACT_IDLE");
 		if(iActivity > 0) npc.StartActivity(iActivity);
 		
+		SetVariantInt(1);
+		AcceptEntityInput(npc.index, "SetBodyGroup");
 		npc.CreatePather(18.0, npc.GetMaxJumpHeight(), 1000.0, npc.GetSolidMask(), 95.0, 0.25, 1.5);
 		npc.m_flNextTargetTime  = GetGameTime() + GetRandomFloat(1.0, 4.0);
 		npc.m_flNextMeleeAttack = npc.m_flNextTargetTime;
@@ -375,6 +391,11 @@ public void ClotThink(int iNPC)
 
 	if(PrimaryThreat.Address != Address_Null)
 	{
+		if (npc.m_iState != 1) {
+
+			npc.PlayIdleAlertSound();
+
+		}
 		npc.m_iState = 1;
 	
 		int PrimaryThreatIndex = PrimaryThreat.GetEntity();	
@@ -470,7 +491,19 @@ public void ClotThink(int iNPC)
 							}
 						}
 						delete swingTrace;
-					npc.m_flNextMeleeAttack = GetGameTime() + 1.5;
+						
+		
+        			char m_plrModelName[PLATFORM_MAX_PATH];
+        			GetEntPropString(npc.index, Prop_Data, "m_ModelName", m_plrModelName, sizeof(m_plrModelName));
+                    if (StrContains(m_plrModelName,"torso") != -1) {
+					
+						npc.m_flNextMeleeAttack = GetGameTime() + 0.625;
+
+					} else {
+
+						npc.m_flNextMeleeAttack = GetGameTime() + 1.5;
+
+					}
 				}
 
 				PF_StopPathing(npc.index);
@@ -478,8 +511,18 @@ public void ClotThink(int iNPC)
 			}
 			else
 			{
-				PF_StartPathing(npc.index);
-				npc.m_bPathing = true;
+				if(npc.m_flNextMeleeAttack > GetGameTime())
+				{
+					
+					PF_StopPathing(npc.index);
+					npc.m_bPathing = false;
+
+				} else {
+
+					PF_StartPathing(npc.index);
+					npc.m_bPathing = true;
+
+				}
 			}
 		}
 	}
@@ -515,7 +558,7 @@ public void ClotThink(int iNPC)
 			npc.m_flNextTargetTime = GetGameTime() + 10.0;
 		}
 	} else {
-		npc.PlayIdleAlertSound();
+		npc.PlayIdleSound();
 	}
 	
 	//v Handle jumping and running v
@@ -704,6 +747,28 @@ public Action ClotDamaged(int victim, int& attacker, int& inflictor, float& dama
 	
 	if(damage >= GetEntProp(victim, Prop_Data, "m_iHealth"))
 	{
+		if(hitgroup == HITGROUP_HEAD)
+		{
+			float flPos[3], flAng[3];
+			GetEntPropVector(victim, Prop_Data, "m_angRotation", flAng); 
+			GetEntPropVector(victim, Prop_Send, "m_vecOrigin", flPos);
+			flPos[2] += 72.0;
+			HeadcrabRagdoll(attacker, flPos, flAng, "models/headcrabclassic.mdl");
+			SetVariantInt(0);
+			AcceptEntityInput(npc.index, "SetBodyGroup");
+		}
+		if (damagetype & DMG_BLAST) 
+		{
+			float flPos[3], flAng[3];
+			GetEntPropVector(victim, Prop_Data, "m_angRotation", flAng); 
+			GetEntPropVector(victim, Prop_Send, "m_vecOrigin", flPos);
+			flPos[2] += 72.0;
+			HeadcrabRagdoll(attacker, flPos, flAng, "models/zombie/classic_torso.mdl");
+			HeadcrabRagdoll(attacker, flPos, flAng, "models/zombie/classic_legs.mdl");
+			HeadcrabRagdoll(attacker, flPos, flAng, "models/headcrabclassic.mdl");
+			SetVariantInt(0);
+			AcceptEntityInput(npc.index, "SetBodyGroup");
+		}
 		npc.PlayDeathSound();
 	}
 	SetEntProp(npc.index, Prop_Send, "m_nBody", nBody);
@@ -787,6 +852,23 @@ public Action Command_PetMenu(int client, int argc)
 		return Plugin_Handled;
 	}
 	Clot(client, flPos, flAng, "models/zombie/classic.mdl");
+	
+	return Plugin_Handled;
+}
+public Action Command_PetMenu2(int client, int argc)
+{
+	//What are you.
+	if(!(client > 0 && client <= MaxClients && IsClientInGame(client)))
+		return Plugin_Handled;
+	
+	float flPos[3], flAng[3];
+	GetClientAbsAngles(client, flAng);
+	if(!SetTeleportEndPoint(client, flPos))
+	{
+		PrintToChat(client, "Could not find place.");
+		return Plugin_Handled;
+	}
+	Clot(client, flPos, flAng, "models/zombie/classic_torso.mdl");
 	
 	return Plugin_Handled;
 }

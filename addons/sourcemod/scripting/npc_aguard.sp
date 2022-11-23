@@ -213,13 +213,13 @@ methodmap Clot < CClotBody
 	
 	public bool IsAlert() { return this.m_iState == 1; }
 	
-	public float GetRunSpeed()      { return this.IsAlert() && !this.IsDecapitated() ? 310.0 : 310.0; }
+	public float GetRunSpeed()      { return this.IsAlert() && !this.IsDecapitated() ? 450.0 : 150.0; }
 	public float GetMaxJumpHeight() { return 50.0; }
 	public float GetLeadRadius()    { return 500.0; }
 	
 	public Clot(int client, float vecPos[3], float vecAng[3], const char[] model)
 	{
-		Clot npc = view_as<Clot>(CBaseActor(vecPos, vecAng, model, "1.0", "500"));
+		Clot npc = view_as<Clot>(CBaseActor(vecPos, vecAng, model, "1.0", "2500"));
 		
 		int iActivity = npc.LookupActivity("ACT_IDLE");
 		if(iActivity > 0) npc.StartActivity(iActivity);
@@ -414,8 +414,18 @@ public void ClotThink(int iNPC)
 			}
 			else
 			{
-				PF_StartPathing(npc.index);
-				npc.m_bPathing = true;
+				if(npc.m_flNextMeleeAttack > GetGameTime())
+				{
+					
+					PF_StopPathing(npc.index);
+					npc.m_bPathing = false;
+
+				} else {
+
+					PF_StartPathing(npc.index);
+					npc.m_bPathing = true;
+
+				}
 			}
 		}
 	}
@@ -461,7 +471,7 @@ public void ClotThink(int iNPC)
 	{
 		if(npc.m_bPathing) {
 			if(npc.IsAlert() && !npc.IsDecapitated()) {
-				idealActivity = npc.LookupActivity("ACT_ANTLIONGUARD_RUN_HURT");
+				idealActivity = npc.LookupActivity("ACT_ANTLIONGUARD_CHARGE_RUN");
 			} else {
 				idealActivity = npc.LookupActivity("ACT_WALK");
 			}

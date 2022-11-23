@@ -40,7 +40,6 @@ char g_IdleSounds[][] = {
 };
 
 char g_IdleAlertedSounds[][] = {
-	")npc/fast_zombie/fz_scream1.wav",
 	")npc/fast_zombie/fz_alert_close1.wav",
 	")npc/fast_zombie/fz_alert_far1.wav",
 };
@@ -52,6 +51,8 @@ char g_MeleeHitSounds[][] = {
 };
 char g_MeleeAttackSounds[][] = {
 	")npc/fast_zombie/fz_frenzy1.wav",
+	")npc/fast_zombie/leap1.wav",
+	")npc/fast_zombie/wake1.wav",
 };
 char g_MeleeMissSounds[][] = {
 	")npc/fast_zombie/claw_miss1.wav",
@@ -213,7 +214,7 @@ methodmap Clot < CClotBody
 	
 	public bool IsAlert() { return this.m_iState == 1; }
 	
-	public float GetRunSpeed()      { return this.IsAlert() && !this.IsDecapitated() ? 330.0 : 330.0; }
+	public float GetRunSpeed()      { return this.IsAlert() && !this.IsDecapitated() ? 330.0 : 50.0; }
 	public float GetMaxJumpHeight() { return 50.0; }
 	public float GetLeadRadius()    { return 500.0; }
 	
@@ -404,7 +405,7 @@ public void ClotThink(int iNPC)
 				if(npc.m_flNextMeleeAttack < GetGameTime())
 				{
 					//Play attack anim
-					npc.AddGesture("ACT_MELEE_ATTACK1");
+					npc.AddGesture("ACT_FASTZOMBIE_BIG_SLASH");
 					
 						Handle swingTrace;
 						if(npc.DoSwingTrace(swingTrace)) 
@@ -453,7 +454,7 @@ public void ClotThink(int iNPC)
 							}
 						}
 						delete swingTrace;
-					npc.m_flNextMeleeAttack = GetGameTime() + 0.5;
+					npc.m_flNextMeleeAttack = GetGameTime() + 1.0;
 				}
 
 				PF_StopPathing(npc.index);
@@ -461,8 +462,18 @@ public void ClotThink(int iNPC)
 			}
 			else
 			{
-				PF_StartPathing(npc.index);
-				npc.m_bPathing = true;
+				if(npc.m_flNextMeleeAttack > GetGameTime())
+				{
+					
+					PF_StopPathing(npc.index);
+					npc.m_bPathing = false;
+
+				} else {
+
+					PF_StartPathing(npc.index);
+					npc.m_bPathing = true;
+
+				}
 			}
 		}
 	}
@@ -510,7 +521,7 @@ public void ClotThink(int iNPC)
 			if(npc.IsAlert() && !npc.IsDecapitated()) {
 				idealActivity = npc.LookupActivity("ACT_RUN");
 			} else {
-				idealActivity = npc.LookupActivity("ACT_RUN");
+				idealActivity = npc.LookupActivity("ACT_WALK");
 			}
 		} else {
 			idealActivity = npc.LookupActivity("ACT_IDLE");

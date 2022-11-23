@@ -217,7 +217,7 @@ methodmap Clot < CClotBody
 	
 	public bool IsAlert() { return this.m_iState == 1; }
 	
-	public float GetRunSpeed()      { return this.IsAlert() && !this.IsDecapitated() ? 50.0 : 70.0; }
+	public float GetRunSpeed()      { return this.IsAlert() && !this.IsDecapitated() ? 50.0 : 50.0; }
 	public float GetMaxJumpHeight() { return 50.0; }
 	public float GetLeadRadius()    { return 500.0; }
 	
@@ -465,8 +465,18 @@ public void ClotThink(int iNPC)
 			}
 			else
 			{
-				PF_StartPathing(npc.index);
-				npc.m_bPathing = true;
+				if(npc.m_flNextMeleeAttack > GetGameTime())
+				{
+					
+					PF_StopPathing(npc.index);
+					npc.m_bPathing = false;
+
+				} else {
+
+					PF_StartPathing(npc.index);
+					npc.m_bPathing = true;
+
+				}
 			}
 		}
 	}
