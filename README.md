@@ -1,5 +1,5 @@
 # HL2 NPCs/Nextbots in TF2
-A plugin based off of Pelipoika's NPCs that adds hl2 nextbot npcs for TF2. They can be summoned with chat commands.
+A plugin based off of Pelipoika's NPCs that adds hl2 nextbot npcs for TF2. They can be summoned with chat commands. Discontinued in favor of [HL2 in TF2](https://github.com/siobhan-saoirse/npcs-in-tf2/releases)
 
 ## Requirements
 
